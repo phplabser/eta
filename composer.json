@@ -1,8 +1,7 @@
 {
   "name": "phplabser/eta",
   "description": "Fast and powerful PHP framework",
-  "minimum-stability": "alpha",
-  "license": "proprietary",
+  "license": "BSD-3-Clause",
   "authors": [
     {
       "name": "Marcin Szczurek",
