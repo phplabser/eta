@@ -1,0 +1,123 @@
+<?php
+/**
+ * Eta Framework 2
+ *
+ * @author Marcin Szczurek <marcin.szczurek@phplabs.pl>
+ * @copyright Copyright (c) 2014-2015 Phplabs (http://www.phplabs.pl)
+ */
+
+namespace Eta\Addon\Db\Adapter;
+
+use Eta\Addon\Db\Adapter;
+use Eta\Core\Debug;
+
+class Mysql extends Adapter {
+
+    /**
+     * @var \PDO
+     */
+    protected $pdo = null;
+
+    /**
+     * @return \PDO
+     */
+    protected function getDb() {
+        if($this->pdo) return $this->pdo;
+
+        $this->pdo = new \PDO(
+            $this->getConfig()->getDsn(),
+            $this->getConfig()->getUser(),
+            $this->getConfig()->getPassword()
+        );
+
+        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        if($charset = $this->getConfig()->getCharset()) {
+            $this->pdo->exec("SET NAMES ".$charset);
+        }
+        return $this->pdo;
+    }
+
+    public function execDML($sql, $bind = []) {
+        $stmt = $this->getDb()->prepare($sql);
+        return $stmt->execute($bind);
+    }
+
+    public function lastInsertId() {
+        return $this->getDb()->lastInsertId();
+    }
+
+    public function getAffectedRows() {
+        return $this->_exec("SELECT FOUND_ROWS() rws",[])->fetch(\PDO::FETCH_ASSOC)['rws'];
+    }
+
+    public function getOne($sql, $bind = []) {
+        return $this->_exec($sql, $bind)->fetchColumn();
+    }
+
+    public function getRow($sql, $bind = []) {
+        return $this->_exec($sql, $bind)->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    public function getColumn($sql, $bind = []) {
+        $rows = $this->getAll($sql, $bind);
+        while(list($k,$v) = each($rows)) {
+            $rows[$k] = reset($v);
+        }
+        return $rows;
+    }
+
+    public function getAll($sql, $bind = [], $assocKey = null) {
+        $stmt = $this->_exec($sql, $bind);
+        $result = [];
+        while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            if($assocKey) {
+                $result[$row[$assocKey]] = $row;
+            } else {
+                $result[] = $row;
+            }
+        }
+        return $result;
+    }
+
+    public function insert($tableName, $parameters)
+    {
+        $fields = array_keys($parameters);
+        array_walk($parameters,function(&$item, $key) {
+            if($item == 'null') $item = null;
+        });
+        $sql = "INSERT INTO $tableName ";
+        $sql .= "(".join(",",$fields).") VALUE (:".join(",:",$fields).")";
+
+        $stmt = $this->getDb()->prepare($sql);
+        return $stmt->execute($parameters);
+    }
+
+    public function update($tableName, $parameters, $primaryKey)
+    {
+        $sql = "UPDATE $tableName SET ";
+        foreach($parameters as $k=>$v) {
+            $fields[] = "$k = :$k";
+        }
+
+        $pk = key($primaryKey);
+        $parameters['__primaryKeyValue'] = $primaryKey[$pk];
+
+        $sql .= join(", ",$fields);
+        $sql .= " WHERE $pk = :__primaryKeyValue";
+        $stmt = $this->getDb()->prepare($sql);
+        return $stmt->execute($parameters);
+    }
+
+    /**
+     * @param $sql
+     * @param $bind
+     * @return \PDOStatement
+     */
+    protected function _exec($sql, $bind) {
+        Debug::putToLog($sql . " [ ". var_export($bind,true)."]");
+        $stmt = $this->getDb()->prepare($sql);
+        $stmt->execute($bind);
+        return $stmt;
+    }
+
+}

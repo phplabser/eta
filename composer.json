@@ -1,0 +1,20 @@
+{
+  "name": "phplabser/eta",
+  "description": "Fast and powerful PHP framework",
+  "minimum-stability": "dev",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Marcin Szczurek",
+      "email": "marcin.szczurek@phplabs.pl"
+    }
+  ],
+  "require": {
+      "php": ">=7.0.6"
+  },
+  "autoload": {
+      "psr-4": {
+          "Eta\\": "library/"
+      }
+  }
+}
