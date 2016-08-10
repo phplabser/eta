@@ -36,7 +36,7 @@ class Bootstrap {
     }
 
     protected function registerAutoLoad() {
-        spl_autoload_register(array($this, 'loadClass'), true, true);
+        spl_autoload_register(array($this, 'loadClass'), true, false);
     }
 
 	public function loadClass(string $class)
@@ -47,12 +47,12 @@ class Bootstrap {
             if (file_exists($path . $class)) {
                 include $path . $class;
                 if (!class_exists($className) && !interface_exists($className)) {
-                    throw new \Eta\Exception\AutoloadException("File loaded but class not found! ($class)", 100);
+                    throw new \RuntimeException("File loaded but class not found! ($class)", 100);
                 }
                 return;
             }
         }
-        throw new \Eta\Exception\AutoloadException("Could not load class file! ($class - last try in $path)", 100);
+        throw new \RuntimeException("Could not load class file! ($class - last try in $path)", 100);
     }
 
     public function getDispatcher(): Dispatcher {
