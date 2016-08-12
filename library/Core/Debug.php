@@ -19,7 +19,7 @@ class Debug {
     }
 
     public static function stop($variable = null) {
-        if(Helper::inDevelMode()) {
+        if(self::inDevelMode()) {
             Output::dump($variable);
             die();
         }
@@ -50,15 +50,14 @@ class Debug {
     public static function configureErrors()
     {
         if (php_sapi_name() == 'cli') return;
-        ini_set("error_prepend_string", "<pre style='font-size: 10px; padding: 0 10px 10px 10px; border: 1px solid #f00; margin: 0 10px 10px 10px; color: #000; background: #fff'>");
+        ini_set("error_prepend_string", "<pre style=\"font-family: 'Courier New' !important; font-size: 11px; padding: 0 10px 10px 10px; border: 1px solid #f00; margin: 0 10px 10px 10px; color: #fff; background: #f00\">");
         ini_set("error_append_string", "</pre>");
-
-        ini_set("display_errors", Helper::inDevelMode());
+        ini_set("display_errors", self::inDevelMode());
         error_reporting(E_ALL);
     }
 
     public static function getExceptionForDisplay() {
-        if(!Helper::inDevelMode()) return "";
+        if(!self::inDevelMode()) return "";
         $exception = "";
         if(Dispatcher::getInstance()->getDispatchException()) {
             $message = Dispatcher::getInstance()->getDispatchException()->getMessage();
@@ -73,6 +72,14 @@ Error description:
 HTML;
         }
         return $exception;
+    }
+
+    public static function inDevelMode() {
+        return getenv('ON_DEV') || getenv('APPLICATION_ENV')=='development' || getenv('APPLICATION_ENV')=='DEVELOPMENT';
+    }
+
+    public static function getAppEnv() {
+        return self::inDevelMode() ? 'development' : 'production';
     }
 
 } 

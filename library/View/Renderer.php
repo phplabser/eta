@@ -73,6 +73,13 @@ class Renderer extends Singleton {
 		}
 	}
 
+    public function load($templateName) {
+        $result = @include(self::$layout . DIRECTORY_SEPARATOR . $templateName . ".phtml");
+        if(false === $result) {
+            echo "<b>ETA Warning:</b> Missing template $templateName";
+        }
+    }
+
     public function registerHelper($name, $class) {
         $this->helpers[$name] = $class;
 		return $this;

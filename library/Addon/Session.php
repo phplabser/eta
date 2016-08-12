@@ -21,7 +21,7 @@ class Session extends Singleton implements \ArrayAccess {
     protected function __construct() {
         $backend = Config::getInstance()->get("session","backend");
         if($backend) {
-            $backendClass = "Eta\\Addon\\Session\\".key($backend);
+            $backendClass = "Eta\\Addon\\Session\\".$backend;
             if (!is_subclass_of($backendClass,"\\SessionHandlerInterface")) {
                 throw new RuntimeException("Session backend must implements SessionHandlerInterface");
             }
