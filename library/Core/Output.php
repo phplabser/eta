@@ -11,7 +11,7 @@
 namespace Eta\Core;
 
 class Output {
-
+    
 	/**
 	 * Returns or put on output expression dump
 	 *
@@ -45,9 +45,9 @@ class Output {
 
 			/* Turn arrows green */
 			$str = str_replace('=>', '<span style="color: #009900;">=></span>', $str);
-			$str = str_replace("    ", "  ", $str);
-			$str = str_replace(")\n", ")", $str);
-
+//			$str = str_replace("    ", "  ", $str);
+//			$str = str_replace(")\n", ")", $str);
+//
 			$str = "<pre style='font-family:lucida console; font-size:11px;'>" . $str . "</pre>\n";
 		}
 
@@ -57,6 +57,8 @@ class Output {
 			echo $str;
 		}
 	}
+
+
 
 
 }

@@ -79,4 +79,35 @@ class Session extends Singleton implements \ArrayAccess {
     public function getBackend() {
         return $this->backend;
     }
+
+    public function getArrayCopy() {
+        return $_SESSION;
+    }
+
+    public function set(...$params) {
+        if(count($params)<2) {
+            throw new \RuntimeException("Set function must have at least two arguments.");
+        }
+
+        $data = $_SESSION[$params[0]] ?? $_SESSION[$params[0]] = [];
+        $pointer = [&$data];
+        for($i = 1; $i < count($params) - 1; $i++) {
+            if(!isset($pointer[$i-1][$params[$i]])) {
+                $pointer[$i-1][$params[$i]] = [];
+            }
+            $pointer[$i] = &$pointer[$i-1][$params[$i]];
+        }
+
+        $pointer[$i-1] = $params[count($params)-1];
+        $_SESSION[$params[0]] = $data;
+    }
+
+    public function get(...$names) {
+        $session = \App::$session->getArrayCopy();
+        foreach($names as $name) {
+            $session = isset($session[$name]) ? $session[$name] : null;
+            if($session===null) return null;
+        }
+        return $session;
+    }
 }

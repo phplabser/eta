@@ -33,7 +33,7 @@ class ActionController {
 		Eta\Core\Dispatch\Request::getInstance()->redirect($url);
 	}
 	
-	protected function getRequest() {
+	protected function getRequest() : Eta\Core\Dispatch\Request {
 		return Eta\Core\Dispatch\Request::getInstance();
 	}
 	

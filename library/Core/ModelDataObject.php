@@ -19,7 +19,7 @@ abstract class ModelDataObject extends BaseArrayObject {
 
     public static function getInstanceById($id) : self {
         $data = static::$_db->getRow("SELECT * FROM " . static::getTableName() . " WHERE " . static::getPrimaryKey() . " = :id",['id' => $id]);
-        return $data ? new static($data) : null;
+        return new static($data ?: []);
     }
 
     protected static function getPrimaryKey() : string {

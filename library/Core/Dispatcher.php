@@ -62,6 +62,7 @@ class Dispatcher extends Singleton {
 			}
 		}
 
+
 		if(!$route) {
 			$resp = $this->notFound();
 		} else {

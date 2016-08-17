@@ -41,21 +41,32 @@ class Renderer extends Singleton {
             $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $module. DIRECTORY_SEPARATOR . "views". DIRECTORY_SEPARATOR . strtolower($route['route']['controller']). DIRECTORY_SEPARATOR .strtolower($route['route']['action']).".phtml";
 
 		} else {
-
+            if(isset($layouts['error'])) {
+                $module = 'error';
+            }
             if (isset($layouts["error/".Response::getInstance()->getResponse()])) {
                 $templatePath = $layouts["error/".Response::getInstance()->getResponse()];
             } else {
                 if (isset($layouts["error"])) {
                     $templatePath = $layouts["error"];
                 } else {
-                    error_log("Eta: ".Response::getInstance()->getResponseType()." - " .Response::getInstance()->getResponse(). " - " .Response::getInstance()->getResponseReason(). " - request: ".Request::getInstance()->getParam('request_uri'));
-                    die("Eta: internal server error!");
+                    Debug::raiseError(
+                        "Internal server error! "
+                        . Response::getInstance()->getResponseType() . " - "
+                        . Response::getInstance()->getResponse() . " - "
+                        . Response::getInstance()->getResponseReason() . " - request: "
+                        . Request::getInstance()->getParam('request_uri')
+                        , Debug::ETA_ERROR_FATAL
+                    );
                 }
             }
 		}
 		
 		ob_start();
-		require_once $templatePath;
+        $resp = @include($templatePath);
+        if(!$resp) {
+            Debug::raiseError("Missing template $templatePath",Debug::ETA_ERROR_WARNING);
+        }
 		$tpl = ob_get_clean();
 		
 		$this->initLayout($module);
@@ -67,16 +78,20 @@ class Renderer extends Singleton {
 		
 		if(self::$layout) {
 			$this->params['templateContent'] = $tpl;
-			require_once self::$layout . DIRECTORY_SEPARATOR . "layout.phtml";
+            $resp = @include(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
+			if(!$resp) {
+                Debug::raiseError("Missing layout template: ".self::$layout . DIRECTORY_SEPARATOR . "layout.phtml",Debug::ETA_ERROR_WARNING);
+            }
 		} else {
 			echo $tpl;
 		}
 	}
 
-    public function load($templateName) {
-        $result = @include(self::$layout . DIRECTORY_SEPARATOR . $templateName . ".phtml");
+    public function load($templateName,$layout = null) {
+        $layout = $layout ?? self::$layout;
+        $result = @include($layout . DIRECTORY_SEPARATOR . $templateName . ".phtml");
         if(false === $result) {
-            echo "<b>ETA Warning:</b> Missing template $templateName";
+            Debug::raiseError("Missing template $templateName (in $layout)",Debug::ETA_ERROR_WARNING);
         }
     }
 
@@ -90,7 +105,7 @@ class Renderer extends Singleton {
             throw new RuntimeException("View helper $helper not registered!");
         }
         if(get_parent_class($this->helpers[$helper]) != "Eta\\View\\Helper") {
-            throw new RuntimeException("Helper {$this->helpers[$helper]} must extend \\Eta\\View\\Helper!");
+            throw new RuntimeException("Helper {$this->helpers[$helper]} must extends \\Eta\\View\\Helper!");
         }
         $helper = $this->helpers[$helper];
         $helper = $helper::getInstance();
@@ -103,7 +118,7 @@ class Renderer extends Singleton {
 		}
 	}
 	
-	public static function setLayout($layout) {
+	public function setLayout($layout) {
 		self::$layout = $layout;
 	}
 
@@ -121,6 +136,7 @@ class Renderer extends Singleton {
 		} else {
 			self::$layout = isset($layouts['default']) ? $layouts['default'] : null;
 		}
+
 		return $this;
 	}
 

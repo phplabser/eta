@@ -20,6 +20,14 @@ abstract class ModelDataObjectFactory extends BaseArrayObject {
         return "\\StdClass";
     }
 
+    protected static function getPrimaryKey() : string {
+        return 'id';
+    }
+
+    protected static function getTableName() : string {
+        return '';
+    }
+
     protected static function buildObjects(Array $array) {
         $childrenClass = static::getChildrenClass();
         reset($array);
@@ -40,7 +48,7 @@ abstract class ModelDataObjectFactory extends BaseArrayObject {
 
 
     public static function getAll() {
-        $sql = "SELECT * FROM ".self::getTableName();
+        $sql = "SELECT * FROM ".static::getTableName();
         $rows = static::$_db->getAll($sql);
         return self::buildObjects($rows);
     }
@@ -91,7 +99,7 @@ abstract class ModelDataObjectFactory extends BaseArrayObject {
                     $v = strtoupper($v);
 
                     if (in_array($v , ['ASC', 'DESC'])) {
-                        $o[] = "$k ";
+                        $o[] = "$k $v";
                     }
                 }
             }
@@ -99,6 +107,7 @@ abstract class ModelDataObjectFactory extends BaseArrayObject {
                 $sql .= " ORDER BY ".join(',', $o);
             }
         }
+
 
         if(!$parameters && !$order && !$limit && !$offset) {
             throw new RuntimeException("No parameters nor order nor limit nor offset provided to getByParameters.",500);
@@ -116,7 +125,6 @@ abstract class ModelDataObjectFactory extends BaseArrayObject {
         }
 
         $sqlReq = "SELECT * FROM ".static::getTableName() ." ". $sql;
-
 
         $rows = static::$_db->getAll($sqlReq,$parameters);
         return self::buildObjects($rows);
