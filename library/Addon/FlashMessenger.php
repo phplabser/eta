@@ -13,16 +13,16 @@ use Eta\Core\Debug;
 abstract class FlashMessenger {
 
     public static function addMessage($namespace, $message) {
-        $msg = (array)Session::getInstance()['flashmessenger'];
+        $msg = (array)Session::getInstance()->get('flashmessenger');
         if(!$msg || !isset($msg[$namespace]) ||!in_array($message,$msg[$namespace])) {
             $msg[$namespace][] = $message;
-            Session::getInstance()['flashmessenger'] = $msg;
+            Session::getInstance()->set('flashmessenger', $msg);
         }
     }
 
     public static function getStack() {
-        $msg = (array)Session::getInstance()['flashmessenger'];
-        Session::getInstance()['flashmessenger'] = [];
+        $msg = (array)Session::getInstance()->get('flashmessenger');
+        Session::getInstance()->set('flashmessenger',[]);
         return $msg;
     }
 

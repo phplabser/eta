@@ -16,8 +16,8 @@ interface DbAdapterInterface {
     public function getConfig();
     public function execDML($sql, $bind = []);
     public function getOne($sql, $bind = []);
-    public function getRow($sql, $bind = []);
-    public function getAll($sql, $bind = []);
+    public function getRow($sql, $bind = [], $objectClassName = null);
+    public function getAll($sql, $bind = [], $objectClassName = null);
     public function getColumn($sql, $bind = []);
     public function update($tableName, $parameters, $primaryKey);
     public function insert($tableName, $parameters);

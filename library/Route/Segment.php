@@ -135,7 +135,7 @@ class Segment
 
             if ($matches['token'] === ':') {
                 if (!preg_match('(\G(?P<name>[^:/{\[\]]+)(?:{(?P<delimiters>[^}]+)})?:?)', $def, $matches, 0, $currentPos)) {
-                    throw new Exception\RuntimeException('Found empty parameter name');
+                    throw new \RuntimeException('Found empty parameter name');
                 }
 
                 $levelParts[$level][] = array('parameter', $matches['name'], isset($matches['delimiters']) ? $matches['delimiters'] : null);
@@ -143,7 +143,7 @@ class Segment
                 $currentPos += strlen($matches[0]);
             } elseif ($matches['token'] === '{') {
                 if (!preg_match('(\G(?P<literal>[^}]+)\})', $def, $matches, 0, $currentPos)) {
-                    throw new Exception\RuntimeException('Translated literal missing closing bracket');
+                    throw new \RuntimeException('Translated literal missing closing bracket');
                 }
 
                 $currentPos += strlen($matches[0]);
@@ -159,7 +159,7 @@ class Segment
                 $level--;
 
                 if ($level < 0) {
-                    throw new Exception\RuntimeException('Found closing bracket without matching opening bracket');
+                    throw new \RuntimeException('Found closing bracket without matching opening bracket');
                 }
             } else {
                 break;
@@ -167,7 +167,7 @@ class Segment
         }
 
         if ($level > 0) {
-            throw new Exception\RuntimeException('Found unbalanced brackets');
+            throw new \RuntimeException('Found unbalanced brackets');
         }
 
         return $parts;
@@ -228,14 +228,14 @@ class Segment
      * @param  bool    $hasChild
      * @param  array   $options
      * @return string
-     * @throws Exception\InvalidArgumentException
-     * @throws Exception\RuntimeException
+     * @throws \InvalidArgumentException
+     * @throws \RuntimeException
      */
     protected function buildPath(array $parts, array $mergedParams, $isOptional, $hasChild, array $options)
     {
         if ($this->translationKeys) {
             if (!isset($options['translator']) || !$options['translator'] instanceof Translator) {
-                throw new Exception\RuntimeException('No translator provided');
+                throw new \RuntimeException('No translator provided');
             }
 
             $translator = $options['translator'];
@@ -258,7 +258,7 @@ class Segment
 
                     if (!isset($mergedParams[$part[1]])) {
                         if (!$isOptional || $hasChild) {
-                            throw new Exception\InvalidArgumentException(sprintf('Missing parameter "%s"', $part[1]));
+                            throw new \InvalidArgumentException(sprintf('Missing parameter "%s"', $part[1]));
                         }
 
                         return '';
@@ -302,7 +302,7 @@ class Segment
      * @param  string|null $pathOffset
      * @param  array       $options
      * @return RouteMatch|null
-     * @throws Exception\RuntimeException
+     * @throws \RuntimeException
      */
     public function match($uri, $pathOffset = null, array $options = array())
     {

@@ -15,6 +15,7 @@ use Eta\Core\Dispatch\Request;
 use Eta\Core\Dispatch\Response;
 use Eta\Core\Output;
 use Eta\Exception\RuntimeException;
+use Eta\Interfaces\PostRendererInterface;
 use Eta\Model\Singleton;
 
 class Renderer extends Singleton {
@@ -26,19 +27,33 @@ class Renderer extends Singleton {
     protected $pageDescription = "";
 
     protected $helpers = [];
+    protected $postRenderer = [];
     protected $useLayout = true;
+
+    protected $forcedTemplate = null;
+
+    protected $generatedTplVars = [];
 
     public function addParams(Array $array) {
         $this->params = array_merge($this->params,$array);
         return $this;
     }
 
-	public function render($route,$module,$params = []) {
+    public function setTemplate($template) {
+        $this->forcedTemplate = $template;
+    }
+
+	public function render($route,$module,$params = [],$return=false) {
         $this->addParams($params);
         $layouts = Config::getInstance()->get('layouts');
 
 		if (Response::getInstance()->getResponseType() == Response::STATUS_OK || Response::getInstance()->getResponseType() == Response::STATUS_REDIRECTION) {
-            $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $module. DIRECTORY_SEPARATOR . "views". DIRECTORY_SEPARATOR . strtolower($route['route']['controller']). DIRECTORY_SEPARATOR .strtolower($route['route']['action']).".phtml";
+		    if($this->forcedTemplate !== null) {
+		        $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $this->forcedTemplate . ".phtml";
+            } else {
+                $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $module. DIRECTORY_SEPARATOR . "views". DIRECTORY_SEPARATOR . strtolower($route['route']['controller']). DIRECTORY_SEPARATOR .strtolower($route['route']['action']).".phtml";
+            }
+
 
 		} else {
             if(isset($layouts['error'])) {
@@ -61,14 +76,9 @@ class Renderer extends Singleton {
                 }
             }
 		}
-		
-		ob_start();
-        $resp = @include($templatePath);
-        if(!$resp) {
-            Debug::raiseError("Missing template $templatePath",Debug::ETA_ERROR_WARNING);
-        }
-		$tpl = ob_get_clean();
-		
+
+
+        $tpl = $this->includeTpl($templatePath);
 		$this->initLayout($module);
 
         if(!$this->useLayout) {
@@ -78,26 +88,55 @@ class Renderer extends Singleton {
 		
 		if(self::$layout) {
 			$this->params['templateContent'] = $tpl;
-            $resp = @include(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
-			if(!$resp) {
-                Debug::raiseError("Missing layout template: ".self::$layout . DIRECTORY_SEPARATOR . "layout.phtml",Debug::ETA_ERROR_WARNING);
-            }
-		} else {
-			echo $tpl;
+
+            $tpl = $this->includeTpl(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
 		}
-	}
+
+        if(count($this->postRenderer)) {
+            foreach ($this->postRenderer as $renderer) {
+                $renderer = new $renderer();
+                if(!($renderer instanceof PostRendererInterface)) {
+                    throw new \RuntimeException("PostRenderer must implements PostRendererInterface");
+                }
+                $tpl = $renderer->render($tpl);
+            }
+        }
+        if($return) return $tpl;
+        echo $tpl;
+    }
+
+    protected function includeTpl($tpl) {
+        ob_start();
+        $resp = include($tpl);
+        $tpl = ob_get_clean();
+        if(!$resp) {
+            Debug::raiseError("Missing template $tpl",Debug::ETA_ERROR_WARNING);
+            return "";
+        }
+        return $tpl;
+    }
 
     public function load($templateName,$layout = null) {
         $layout = $layout ?? self::$layout;
-        $result = @include($layout . DIRECTORY_SEPARATOR . $templateName . ".phtml");
-        if(false === $result) {
-            Debug::raiseError("Missing template $templateName (in $layout)",Debug::ETA_ERROR_WARNING);
-        }
+        $tpl = $this->includeTpl($layout . DIRECTORY_SEPARATOR . $templateName . ".phtml");
+
+        echo $tpl;
+        return;
+
+//        $result = @include($layout . DIRECTORY_SEPARATOR . $templateName . ".phtml");
+//        if(false === $result) {
+//            Debug::raiseError("Missing template $templateName (in $layout)",Debug::ETA_ERROR_WARNING);
+//        }
     }
 
     public function registerHelper($name, $class) {
         $this->helpers[$name] = $class;
 		return $this;
+    }
+
+    public function registerPostRenderer($name, $class) {
+        $this->postRenderer[$name] = $class;
+        return $this;
     }
 
     public function __call($helper, $params) {

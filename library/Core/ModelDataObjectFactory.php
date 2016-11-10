@@ -10,11 +10,15 @@ namespace Eta\Core;
 
 
 use Eta\Exception\RuntimeException;
-use Eta\Model\BaseArrayObject;
+use Eta\Addon\Db\Adapter;
+use Eta\Model\Base;
 
-abstract class ModelDataObjectFactory extends BaseArrayObject {
+abstract class ModelDataObjectFactory extends Base {
 
     protected static $count = 0;
+    /**
+     * @var \Eta\Addon\Db\Adapter
+     */
 
     protected static function getChildrenClass() {
         return "\\StdClass";
@@ -28,12 +32,17 @@ abstract class ModelDataObjectFactory extends BaseArrayObject {
         return '';
     }
 
+    protected static function getTableFields()  {
+        return [];
+    }
+
     protected static function buildObjects(Array $array) {
         $childrenClass = static::getChildrenClass();
         reset($array);
         while(list($k,$v) = each($array)) {
             $array[$k] = new $childrenClass($v);
         }
+
         return $array;
     }
 
@@ -62,7 +71,7 @@ abstract class ModelDataObjectFactory extends BaseArrayObject {
             $sql .= " = :id";
             $parameters = ["id" => $ids];
         }
-        $rows = static::$_db->getAll($sql,$parameters,"id");
+        $rows = static::$_db->getAll($sql,$parameters);
         return self::buildObjects($rows);
     }
 

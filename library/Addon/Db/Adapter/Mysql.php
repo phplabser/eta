@@ -9,6 +9,7 @@
 namespace Eta\Addon\Db\Adapter;
 
 use Eta\Addon\Db\Adapter;
+use Eta\Addon\Db\Tunnel;
 use Eta\Core\Debug;
 
 class Mysql extends Adapter {
@@ -19,22 +20,56 @@ class Mysql extends Adapter {
     protected $pdo = null;
 
     /**
+     * @var \PDO
+     */
+    protected $unbufferedPdo = null;
+
+    /**
      * @return \PDO
      */
-    protected function getDb() {
-        if($this->pdo) return $this->pdo;
-
-        $this->pdo = new \PDO(
-            $this->getConfig()->getDsn(),
-            $this->getConfig()->getUser(),
-            $this->getConfig()->getPassword()
-        );
-
-        $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        if($charset = $this->getConfig()->getCharset()) {
-            $this->pdo->exec("SET NAMES ".$charset);
+    protected function getDb($newUnbuffered = false) {
+        if(!$newUnbuffered) {
+            if ($this->pdo) return $this->pdo;
         }
-        return $this->pdo;
+
+        $pdo = null;
+
+        if($this-getConfig()->hasTunneledConnection()) {
+            try {
+                $pdo = new \PDO(
+                    $this-getConfig()->getDsn(false, 'mysql'),
+                    $this-getConfig()->getUser(),
+                    $this-getConfig()->getPassword()
+                );
+            } catch (\PDOException $e) {
+                $tunnel = new Tunnel($this-getConfig()->getTunnelName());
+                $tunnel->connect();
+            }
+        }
+        if(!$pdo) {
+            $pdo = new \PDO(
+                $this-getConfig()->getDsn(false, 'mysql'),
+                $this-getConfig()->getUser(),
+                $this-getConfig()->getPassword()
+            );
+        }
+
+        if($newUnbuffered) {
+            $pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        }
+
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        if ($charset = $this->getConfig()->getCharset()) {
+            $pdo->exec("SET NAMES " . $charset);
+        }
+
+        if(!$newUnbuffered) {
+            $this->pdo = $pdo;
+            return $this->pdo;
+        } else {
+            $this->unbufferedPdo = $pdo;
+            return $this->unbufferedPdo;
+        }
     }
 
     public function execDML($sql, $bind = []) {
@@ -54,8 +89,13 @@ class Mysql extends Adapter {
         return $this->_exec($sql, $bind)->fetchColumn();
     }
 
-    public function getRow($sql, $bind = []) {
-        return $this->_exec($sql, $bind)->fetch(\PDO::FETCH_ASSOC);
+    public function get($sql, $bind = []) {
+        return $this->_exec($sql, $bind, true);
+    }
+
+    public function getRow($sql, $bind = [], $objectClassName = null) {
+        $row = $this->_exec($sql, $bind)->fetch(\PDO::FETCH_ASSOC);
+        return $objectClassName===null ? $row : new $objectClassName($row);
     }
 
     public function getColumn($sql, $bind = []) {
@@ -66,14 +106,14 @@ class Mysql extends Adapter {
         return $rows;
     }
 
-    public function getAll($sql, $bind = [], $assocKey = null) {
+    public function getAll($sql, $bind = [], $objectClassName = null, $assocKey = null) {
         $stmt = $this->_exec($sql, $bind);
         $result = [];
         while($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
             if($assocKey) {
-                $result[$row[$assocKey]] = $row;
+                $result[$row[$assocKey]] = $objectClassName===null ? $row : new $objectClassName($row);
             } else {
-                $result[] = $row;
+                $result[] = $objectClassName===null ? $row : new $objectClassName($row);
             }
         }
         return $result;
@@ -111,11 +151,12 @@ class Mysql extends Adapter {
     /**
      * @param $sql
      * @param $bind
+     * @param $useUnbuffered
      * @return \PDOStatement
      */
-    protected function _exec($sql, $bind) {
+    protected function _exec($sql, $bind, $useUnbuffered = false) {
         Debug::putToLog($sql . " [ ". var_export($bind,true)."]");
-        $stmt = $this->getDb()->prepare($sql);
+        $stmt = $this->getDb($useUnbuffered)->prepare($sql);
         $stmt->execute($bind);
         return $stmt;
     }

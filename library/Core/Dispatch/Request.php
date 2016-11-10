@@ -35,9 +35,13 @@ class Request extends Singleton {
         $_POST = $_REQUEST = $_GET = [];
 	}
 	
-	public function isPost() {
+	public function isPost() : bool {
 		return $this->server->request_method == 'POST';
 	}
+
+	public function isXhr() : bool {
+	    return isset($this->server->http_x_requested_with) ? $this->server->http_x_requested_with == 'XMLHttpRequest' : false;
+    }
 
 	public function getPostParam($key) {
         if(!$this->isPost()) return null;
@@ -68,7 +72,7 @@ class Request extends Singleton {
 		return $this->server->$param ?? null;
 	}
 
-    public function getMethod() {
+    public function getMethod() : string {
         return $this->server->request_method;
     }
 

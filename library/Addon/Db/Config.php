@@ -59,9 +59,17 @@ class Config {
         return isset($this->configData['database']) ? $this->configData['database'] : null;
     }
 
-    final public function getDsn($withCredentials = false) : string {
+    final public function hasTunneledConnection() : bool {
+        return isset($this->configData['use_tunnel']);
+    }
+
+    final public function getTunnelName() : string {
+        return isset($this->configData['use_tunnel']) ? $this->configData['use_tunnel'] : null;
+    }
+
+    final public function getDsn($withCredentials = false,$forceAdapterName = "") : string {
         return
-            strtolower($this->configData['adapter']).":"
+            strtolower($forceAdapterName ? $forceAdapterName : $this->configData['adapter']).":"
             . "host=".$this->configData['host']
             . ";port=".$this->configData['port']
             . ($withCredentials ? ";user=".$this->configData['user'] . ";password=".$this->configData['password'] : "")

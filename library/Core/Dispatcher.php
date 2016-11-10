@@ -62,7 +62,6 @@ class Dispatcher extends Singleton {
 			}
 		}
 
-
 		if(!$route) {
 			$resp = $this->notFound();
 		} else {
@@ -70,8 +69,8 @@ class Dispatcher extends Singleton {
             try {
                 $resp = $this->execute($route, $this->currentModule);
             } catch (\Exception $e) {
-                $trace = $e->getTrace()[0];
 				error_log("ETA: ".$e->getMessage()." in ".($trace['file'] ?? "unknown")." at line ". ($trace['line'] ?? "null"));
+
                 $this->exception = $e;
                 $resp = $this->serverError($e);
             }
@@ -96,10 +95,11 @@ class Dispatcher extends Singleton {
 				throw new \Eta\Exception\RouteException("Router type not set in route $routeName!");
 			}
 			$router = "\\Eta\\Route\\$router";
-			$r = new $router($rd['route'],$rd['constraints'],isset($rd['spec']) ? $rd['spec'] : []);
+			$r = new $router($rd['route'],$rd['constraints'],$rd['spec'] ?? []);
 			$resp = $r->match($this->getUri(true));
 			if($resp) {
-				return [
+
+                return [
 					'route' => $resp,
 					'routeMatch' => $routeName
 				];
@@ -109,8 +109,8 @@ class Dispatcher extends Singleton {
 	}
 	
 	protected function getUri($trimQueryString = false): string {
-        $uri = $_SERVER['REQUEST_URI'];
-        if($trimQueryString) {
+        $uri = $_SERVER['REQUEST_URI'] ?? $_SERVER['argv'][1] ?? "";
+        if($trimQueryString && php_sapi_name()!='cli') {
             $uri = str_replace("?".$_SERVER['QUERY_STRING'],"",$_SERVER['REQUEST_URI']);
         }
         $uri = rtrim(trim($uri),"/");
@@ -138,6 +138,11 @@ class Dispatcher extends Singleton {
     }
 	
 	protected function execute(array $route,string $module) {
+
+	    if(!isset($route['route']) || !isset($route['route']['controller']) || !isset($route['route']['action'])) {
+	        throw new \Eta\Exception\BootstrapException("Routing failed.");
+        }
+
 		$controllerString = "\\$module\\Controller\\".ucfirst(strtolower($route['route']['controller']))."Controller";
 		$actionString = $this->buildActionString($route['route']['action']);
 		
@@ -147,7 +152,10 @@ class Dispatcher extends Singleton {
 		}
 		$controller->onDispatch();
 		
-		if(!$actionString || !method_exists($controller, $actionString)) $this->notFound();
+		if(!$actionString || !method_exists($controller, $actionString)) {
+		    $this->notFound();
+            return [];
+        }
 		$returnData =  $controller->$actionString();
 
 		$endData = $controller->onActionEnds();

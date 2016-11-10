@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Eta\Core;
 
+use Eta\Exception\RuntimeException;
+
 class Bootstrap {
 
     protected $applicationPath;
@@ -47,12 +49,12 @@ class Bootstrap {
             if (file_exists($path . $class)) {
                 include $path . $class;
                 if (!class_exists($className) && !interface_exists($className)) {
-                    throw new \RuntimeException("File loaded but class not found! ($class)", 100);
+                    throw new RuntimeException("File loaded but class not found! ($class)", 100);
                 }
                 return;
             }
         }
-        throw new \RuntimeException("Could not load class file! ($class - last try in $path)", 100);
+        throw new RuntimeException("Could not load class file! ($class - last try in $path)", 100);
     }
 
     public function getDispatcher(): Dispatcher {

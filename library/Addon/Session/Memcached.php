@@ -18,7 +18,7 @@ class Memcached implements \SessionHandlerInterface {
 
     public function open($savePath, $sessionName) {
         $this->memBackend = \Eta\Addon\Memcached::getInstance();
-        $this->lifetime = \Eta\Core\Config::getInstance()->get("session","backend","Memcached","lifetime") ?: $this->lifetime;
+        $this->lifetime = \Eta\Core\Config::getInstance()->get("session","lifetime") ?: $this->lifetime;
         return true;
     }
 

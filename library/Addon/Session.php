@@ -14,7 +14,7 @@ use Eta\Core\Debug;
 use Eta\Exception\RuntimeException;
 use Eta\Model\Singleton;
 
-class Session extends Singleton implements \ArrayAccess {
+class Session extends Singleton {
 
     protected $backend = null;
 
@@ -37,11 +37,31 @@ class Session extends Singleton implements \ArrayAccess {
             $config['lifetime'] ?? ini_get("session.gc_maxliftime"),
             $config['path'] ?? ini_get("session.cookie_path"),
             $config['cookie_domain'] ?? ini_get("session.cookie_domain"),
-            $config['cookie_secure'] ??ini_get("session.cookie_secure"),
-            $config['cookie_httponly'] ??ini_get("session.cookie_httponly")
+            $config['cookie_secure'] ?? ini_get("session.cookie_secure"),
+            $config['cookie_httponly'] ?? ini_get("session.cookie_httponly")
         );
+        if(isset($config['name']) && $config['name']) {
+            session_name($config['name']);
+        }
         session_start();
+        self::prolongCookie();
         if(isset($_SESSION['_creationTime'])) $_SESSION['_creationTime'] = time();
+    }
+
+    protected static function prolongCookie() {
+        $config = Config::getInstance()->get("session");
+        setcookie(
+            session_name(),self::getId(),
+            time() + $config['lifetime'] ?? ini_get("session.gc_maxliftime"),
+            $config['path'] ?? ini_get("session.cookie_path"),
+            $config['cookie_domain'] ?? ini_get("session.cookie_domain"),
+            $config['cookie_secure'] ?? ini_get("session.cookie_secure"),
+            $config['cookie_httponly'] ?? ini_get("session.cookie_httponly")
+        );
+    }
+
+    public static function getId() {
+        return session_id();
     }
 
     public function destroy() {
@@ -54,26 +74,6 @@ class Session extends Singleton implements \ArrayAccess {
 
     public function restart() {
         session_reset();
-    }
-
-    public function offsetSet($offset, $value) {
-        if (is_null($offset)) {
-            $_SESSION[] = $value;
-        } else {
-            $_SESSION[$offset] = $value;
-        }
-    }
-
-    public function offsetExists($offset) {
-        return isset($_SESSION[$offset]);
-    }
-
-    public function offsetUnset($offset) {
-        unset($_SESSION[$offset]);
-    }
-
-    public function offsetGet($offset) {
-        return isset($_SESSION[$offset]) ? $_SESSION[$offset] : null;
     }
 
     public function getBackend() {

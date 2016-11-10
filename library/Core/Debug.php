@@ -15,6 +15,8 @@ class Debug {
     const ETA_ERROR_WARNING = 'Warning';
     const ETA_ERROR_FATAL   = 'Fatal Error';
 
+    const APP_LOG_FILE      = 'application/data/logs/application.log';
+
     protected static $applicationStartTime = 0;
     protected static $runtimeLog = [];
 
@@ -29,14 +31,21 @@ class Debug {
         }
     }
 
-    public static function putToLog($string) {
+    public static function putToLog($string, $logFile = null) {
         $tm = time();
-        self::$runtimeLog[] = [
+        $logData = [
             'date' => $tm,
             'runtime' => $tm - self::$applicationStartTime,
             'caller' => debug_backtrace()[1]['function'],
             'information' => $string
         ];
+        //self::$runtimeLog[] = $logData;
+
+        @file_put_contents(self::APP_LOG_FILE,date("[Y-m-d H:i:s] ",$logData['date'])."({$logData['runtime']}) ".$logData['information']. PHP_EOL,FILE_APPEND);
+
+        if($logFile) {
+            @file_put_contents($logFile,date("[Y-m-d H:i:s] ",$logData['date'])."({$logData['runtime']}) ".$logData['information']. PHP_EOL,FILE_APPEND);
+        }
     }
 
     public static function getLog() {
