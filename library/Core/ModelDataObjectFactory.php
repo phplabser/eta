@@ -79,7 +79,7 @@ abstract class ModelDataObjectFactory extends Base {
         return self::$count;
     }
 
-    public static function getByParameters(Array $parameters = [], Array $order = [], $limit = null, $offset = null) {
+    public static function getByParameters(Array $parameters = [], Array $order = [], $limit = null, $offset = null, Array $searchParams = []) {
         $sql = "";
 
         $fields = static::getTableFields();
@@ -96,6 +96,17 @@ abstract class ModelDataObjectFactory extends Base {
                 $keys[$k] = "$v = :$v";
             }
             $sql .= " WHERE ".join(" AND ", $keys);
+        }
+
+        if(count($searchParams)) {
+            $tmp = [];
+            foreach ($searchParams as $field => $val) {
+                $fieldBindName = "_search_" . preg_replace('/[^[:alnum:]]/', '_', $field);
+                $tmp[] = $field . " LIKE :" . $fieldBindName;
+                $params[$fieldBindName] = $val;
+            }
+            $sql .= (count($parameters) ? " AND " : " WHERE ") . " (" . implode(" OR ", $tmp) . ")";
+            $parameters = array_merge($parameters, $params);
         }
 
         if(count($order)) {
