@@ -23,6 +23,12 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
     }
 
     public static function getInstanceById($id) : self {
+        if($id<0) {
+            $resp = static::getDataForNegativeIds($id);
+            if($resp !== false) {
+                return new static($resp);
+            }
+        }
         $data = static::$_db->getRow("SELECT * FROM " . static::getTableName() . " WHERE " . static::getPrimaryKey() . " = :id",['id' => $id]);
         return new static($data ?: []);
     }
@@ -37,6 +43,10 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
 
     protected static function getTableFields() : array{
         return [];
+    }
+
+    protected static function getDataForNegativeIds(int $id) {
+        return false;
     }
 
     public function getObjectId() {
