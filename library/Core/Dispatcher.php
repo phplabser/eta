@@ -97,8 +97,7 @@ class Dispatcher extends Singleton {
 			$router = "\\Eta\\Route\\$router";
 			$r = new $router($rd['route'],$rd['constraints'],$rd['spec'] ?? []);
 			$resp = $r->match($this->getUri(true));
-			if($resp) {
-
+			if($resp && (((!isset($rd['terminal']) || !$rd['terminal']) && php_sapi_name()!='cli') || isset($rd['terminal']) && $rd['terminal'] && php_sapi_name()=='cli')) {
                 return [
 					'route' => $resp,
 					'routeMatch' => $routeName
