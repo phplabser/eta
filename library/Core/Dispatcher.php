@@ -69,7 +69,8 @@ class Dispatcher extends Singleton {
             try {
                 $resp = $this->execute($route, $this->currentModule);
             } catch (\Exception $e) {
-				error_log("ETA: ".$e->getMessage()." in ".($trace['file'] ?? "unknown")." at line ". ($trace['line'] ?? "null"));
+		$trace = $e->getTrace()[0];
+		error_log("ETA: ".$e->getMessage()." in ".($trace['file'] ?? "unknown")." at line ". ($trace['line'] ?? "null"));
 
                 $this->exception = $e;
                 $resp = $this->serverError($e);
