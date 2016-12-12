@@ -123,7 +123,7 @@ class Mysql extends Adapter {
     {
         $fields = array_keys($parameters);
         array_walk($parameters,function(&$item, $key) {
-            if($item == 'null') $item = null;
+            if($item === 'null') $item = null;
         });
         $sql = "INSERT INTO $tableName ";
         $sql .= "(".join(",",$fields).") VALUE (:".join(",:",$fields).")";
