@@ -76,7 +76,10 @@ class MysqlMulti extends Mysql
 
     public function execDML($sql, $bind = []) {
         $server = $this->resolveServer($sql);
+        return $this->execOnServer($sql, $server, $bind);
+    }
 
+    public function execOnServer($sql, $server, $bind = []) {
         $stmt = $this->getDbServer($server)->prepare($sql);
         return $stmt->execute($bind);
     }
