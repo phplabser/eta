@@ -136,8 +136,7 @@ class MysqlMulti extends Mysql
         $preg = '/(\sfrom|\sinto|^update|\supdate|^truncate table)(\s+`?)([a-z_0-9]+)/i';
 
         preg_match($preg,$query,$sub);
-        $tbl  = trim($sub[3]);
-
+	$tbl  = isset($sub[3]) ? trim($sub[3]) : null;
 
         if ($tbl) {
             foreach (self::$tableMap as $server=>$tables) {
