@@ -29,7 +29,7 @@ class Memcached implements \SessionHandlerInterface {
     public function read($id) {
         $value = $this->memBackend["session_".$id];
         $this->memBackend->touch("session_".$id,$this->lifetime);
-        return $value;
+        return $value ?? "";
     }
 
     public function write($id, $data) {

@@ -27,7 +27,9 @@ class Session extends Singleton {
             }
             $backendObject = new $backendClass;
             $this->backend = $backendObject;
-        }
+        } else {
+	       throw new RuntimeException("Session backend not provided");
+	}
         session_set_save_handler($backendObject,true);
     }
 
