@@ -42,7 +42,13 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
     }
 
     protected static function getTableName() : string {
-        return '';
+        $className = explode("\\",static::class);
+        $className = lcfirst(end($className));
+        $className = preg_replace_callback("/([A-Z]{1})/",function($matches) {
+            return "_".strtolower($matches);
+        },$className);
+
+        return $className;
     }
 
     protected static function getTableFields() : array{
@@ -158,7 +164,7 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
         $types = ['all','row','one'];
         $type = !in_array($type,$types) ? $type : self::SELECT_ALL;
         $w = [];
-        $sql = "SELECT * FROM " . self::getTableName();
+        $sql = "SELECT * FROM " . static::getTableName();
         if($whereClause) {
             if(is_array($whereClause)){
                 foreach ($whereClause as $k => $v) {
