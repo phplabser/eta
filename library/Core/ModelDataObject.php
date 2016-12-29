@@ -53,6 +53,10 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
         return $this->objectData[static::getPrimaryKey()] ?? null;
     }
 
+    public function isValid() : bool {
+        return $this->getObjectId() !== 0;
+    }
+
     public function get($tableField) {
         return isset($this->objectData[$tableField]) ? $this->objectData[$tableField] : null;
     }
