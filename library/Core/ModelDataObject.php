@@ -154,7 +154,7 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
         return $this->getArrayCopy();
     }
 
-    protected function select($whereClause = null, $type = self::SELECT_ALL) {
+    protected static function select($whereClause = null, $type = self::SELECT_ALL) {
         $types = ['all','row','one'];
         $type = !in_array($type,$types) ? $type : self::SELECT_ALL;
         $w = [];
