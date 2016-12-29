@@ -162,7 +162,7 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
 
     protected static function select($whereClause = null, $type = self::SELECT_ALL) {
         $types = ['all','row','one'];
-        $type = !in_array($type,$types) ? $type : self::SELECT_ALL;
+        $type = in_array($type,$types) ? $type : self::SELECT_ALL;
         $w = [];
         $sql = "SELECT * FROM " . static::getTableName();
         if($whereClause) {
