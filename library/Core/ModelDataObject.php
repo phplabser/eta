@@ -45,7 +45,7 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
         $className = explode("\\",static::class);
         $className = lcfirst(end($className));
         $className = preg_replace_callback("/([A-Z]{1})/",function($matches) {
-            return "_".strtolower($matches);
+            return "_".strtolower($matches[1]);
         },$className);
 
         return $className;
