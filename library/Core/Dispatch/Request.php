@@ -104,4 +104,9 @@ class Request extends Singleton {
 
         return $raw;
     }
+
+    public function getDataFromJson() {
+	    $resp = $this->getRawData();
+	    return json_decode($resp);
+    }
 }
