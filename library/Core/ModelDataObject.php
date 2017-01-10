@@ -64,7 +64,7 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
     }
 
     public function isValid() : bool {
-        return $this->getObjectId() !== 0;
+        return $this->getObjectId() !== 0 && $this->getObjectId() !== null && $this->getObjectId() !== "";
     }
 
     public function get($tableField) {
