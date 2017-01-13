@@ -129,8 +129,10 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
     public function add($ignorePrimaryKeyField = true) {
         if($ignorePrimaryKeyField && isset($this->objectData[static::getPrimaryKey()])) unset($this->objectData[static::getPrimaryKey()]);
         static::$_db->insert(static::getTableName(),$this->getArrayCopy());
-        $newId = static::$_db->lastInsertId();
-        $this->objectData[static::getPrimaryKey()] = $newId;
+        if($ignorePrimaryKeyField) {
+            $newId                                     = static::$_db->lastInsertId();
+            $this->objectData[static::getPrimaryKey()] = $newId;
+        }
         $this->changedFields = [];
         return $newId;
     }
