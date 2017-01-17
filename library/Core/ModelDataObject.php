@@ -134,7 +134,7 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
             $this->objectData[static::getPrimaryKey()] = $newId;
         }
         $this->changedFields = [];
-        return $newId;
+        return $this->objectData[static::getPrimaryKey()];
     }
 
     public function sanitize() {

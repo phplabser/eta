@@ -15,6 +15,10 @@ use Eta\Model\Base;
 
 abstract class ModelDataObjectFactory extends Base {
 
+    const SELECT_ALL = 'all';
+    const SELECT_ROW = 'row';
+    const SELECT_ONE = 'one';
+
     protected static $count = 0;
     /**
      * @var \Eta\Addon\Db\Adapter
@@ -148,5 +152,25 @@ abstract class ModelDataObjectFactory extends Base {
 
         $rows = static::$_db->getAll($sqlReq,$parameters);
         return self::buildObjects($rows);
+    }
+
+    protected static function select($whereClause = null, $type = self::SELECT_ALL) {
+        $types = ['all','row','one'];
+        $type = in_array($type,$types) ? $type : self::SELECT_ALL;
+        $w = [];
+        $sql = "SELECT * FROM " . static::getTableName();
+        if($whereClause) {
+            if(is_array($whereClause)){
+                foreach ($whereClause as $k => $v) {
+                    $w[] = "$k = :$k";
+                }
+                $w = join(" AND ", $w);
+            } else {
+                $w = $whereClause;
+            }
+        }
+        if(count($w)) $sql .= " WHERE ".$w;
+        $method = "get".ucfirst($type);
+        return self::$_db->$method($sql,$whereClause);
     }
 } 
