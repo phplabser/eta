@@ -154,11 +154,22 @@ abstract class ModelDataObjectFactory extends Base {
         return self::buildObjects($rows);
     }
 
-    protected static function select($whereClause = null, $type = self::SELECT_ALL) {
+    protected static function select($whereClause = null, $type = self::SELECT_ALL, $fields = null) {
         $types = ['all','row','one'];
         $type = in_array($type,$types) ? $type : self::SELECT_ALL;
         $w = [];
-        $sql = "SELECT * FROM " . static::getTableName();
+        if($fields) {
+            foreach ($fields as &$field) {
+                if(!in_array($field,static::getTableFields())) {
+                    throw new RuntimeException("No field in getTableFields().");
+                }
+            }
+            $fields = join(", ",$fields);
+        } else {
+            $fields = "*";
+        }
+
+        $sql = "SELECT ".$fields." FROM " . static::getTableName();
         if($whereClause) {
             if(is_array($whereClause)){
                 foreach ($whereClause as $k => $v) {

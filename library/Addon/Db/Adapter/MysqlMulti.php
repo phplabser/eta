@@ -79,9 +79,10 @@ class MysqlMulti extends Mysql
         return $this->execOnServer($sql, $server, $bind);
     }
 
-    public function execOnServer($sql, $server, $bind = []) {
+    public function execOnServer($sql, $server, $bind = [], $statementAsResult = false) {
         $stmt = $this->getDbServer($server)->prepare($sql);
-        return $stmt->execute($bind);
+        $resp = $stmt->execute($bind);
+        return $statementAsResult ? $stmt : $resp;
     }
 
     public function insert($tableName, $parameters)

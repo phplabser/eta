@@ -162,11 +162,20 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
         return $this->getArrayCopy();
     }
 
-    protected static function select($whereClause = null, $type = self::SELECT_ALL) {
+    protected static function select($whereClause = null, $type = self::SELECT_ALL, $fields = null) {
         $types = ['all','row','one'];
         $type = in_array($type,$types) ? $type : self::SELECT_ALL;
         $w = [];
-        $sql = "SELECT * FROM " . static::getTableName();
+        if($fields) {
+            foreach ($fields as &$field) {
+                $field = "`".str_replace("`","",$field)."`";
+            }
+            $fields = join(", ",$fields);
+        } else {
+            $fields = "*";
+        }
+
+        $sql = "SELECT ".$fields." FROM " . static::getTableName();
         if($whereClause) {
             if(is_array($whereClause)){
                 foreach ($whereClause as $k => $v) {
