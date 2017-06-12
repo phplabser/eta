@@ -136,7 +136,7 @@ class Mysql extends Adapter {
     {
         $sql = "UPDATE $tableName SET ";
         foreach($parameters as $k=>$v) {
-            $fields[] = "$k = :$k";
+            $fields[] = "`$k` = :$k";
         }
 
         $pk = key($primaryKey);
