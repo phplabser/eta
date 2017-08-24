@@ -130,14 +130,14 @@ class MysqlMulti extends Mysql
 
     protected function resolveServer(&$sql) {
         self::$servers = Config::getInstance()->get('database','servers');
-        self::$tableMap = Config::getInstance()->get('database','table_map');
+        self::$tableMap = Config::getInstance()->get('database','table_map') ?? [];
 
 
         $query  = trim($sql);
         $preg = '/(\sfrom|\sinto|^update|\supdate|^truncate table)(\s+`?)([a-z_0-9]+)/i';
 
         preg_match($preg,$query,$sub);
-	$tbl  = isset($sub[3]) ? trim($sub[3]) : null;
+	    $tbl  = isset($sub[3]) ? trim($sub[3]) : null;
 
         if ($tbl) {
             foreach (self::$tableMap as $server=>$tables) {
