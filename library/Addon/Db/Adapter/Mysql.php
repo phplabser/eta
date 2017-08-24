@@ -34,7 +34,7 @@ class Mysql extends Adapter {
 
         $pdo = null;
 
-        if($this-getConfig()->hasTunneledConnection()) {
+        if($this->getConfig()->hasTunneledConnection()) {
             try {
                 $pdo = new \PDO(
                     $this-getConfig()->getDsn(false, 'mysql'),
@@ -48,9 +48,9 @@ class Mysql extends Adapter {
         }
         if(!$pdo) {
             $pdo = new \PDO(
-                $this-getConfig()->getDsn(false, 'mysql'),
-                $this-getConfig()->getUser(),
-                $this-getConfig()->getPassword()
+                $this->getConfig()->getDsn(false, 'mysql'),
+                $this->getConfig()->getUser(),
+                $this->getConfig()->getPassword()
             );
         }
 
