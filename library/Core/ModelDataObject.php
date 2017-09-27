@@ -188,6 +188,6 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
         }
         if(count($w)) $sql .= " WHERE ".$w;
         $method = "get".ucfirst($type);
-        return self::$_db->$method($sql,$whereClause);
+        return self::$_db->$method($sql,is_array($whereClause) ? $whereClause : []);
     }
 } 
