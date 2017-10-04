@@ -77,6 +77,21 @@ class Mysql extends Adapter {
         return $stmt->execute($bind);
     }
 
+    public function describe($tableName) {
+        $cacheFile = "application/data/cache/".md5($tableName);
+        if(file_exists($cacheFile)) {
+            return unserialize(file_get_contents($cacheFile));
+        }
+        $isOk = preg_match("/[a-z0-9_-]/i",$tableName);
+        if(!$isOk) {
+            throw new Exception("Trying to describe table which name is not well-formated");
+        }
+        $result = $this->_exec("DESCRIBE $tableName", []);
+        $fields = $result->fetchAll(\PDO::FETCH_ASSOC);
+        file_put_contents($cacheFile,serialize($fields));
+        return $fields;
+    }
+
     public function lastInsertId() {
         return $this->getDb()->lastInsertId();
     }

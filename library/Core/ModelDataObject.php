@@ -51,8 +51,9 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
         return $className;
     }
 
-    protected static function getTableFields() : array{
-        return [];
+    protected static function getTableFields() : array {
+        $fields = static::$_db->describe(self::getTableName());
+        return array_column($fields,'Field');
     }
 
     protected static function getDataForNegativeIds(int $id) {
