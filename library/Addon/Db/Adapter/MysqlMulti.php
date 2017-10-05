@@ -134,7 +134,7 @@ class MysqlMulti extends Mysql
 
 
         $query  = trim($sql);
-        $preg = '/(\sfrom|\sinto|^update|\supdate|^truncate table)(\s+`?)([a-z_0-9]+)/i';
+        $preg = '/(\sfrom|\sinto|^update|\supdate|^truncate table|^describe)(\s+`?)([a-z_0-9]+)/i';
 
         preg_match($preg,$query,$sub);
 	    $tbl  = isset($sub[3]) ? trim($sub[3]) : null;
