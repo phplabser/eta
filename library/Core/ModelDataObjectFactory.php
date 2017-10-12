@@ -37,7 +37,7 @@ abstract class ModelDataObjectFactory extends Base {
     }
 
     protected static function getTableFields()  {
-        $fields = static::$_db->describe(self::getTableName());
+        $fields = static::$_db->describe(static::getTableName());
         return array_column($fields,'Field');
     }
 
