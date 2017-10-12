@@ -11,6 +11,7 @@ namespace Eta\Addon\Db\Adapter;
 use Eta\Addon\Db\Adapter;
 use Eta\Addon\Db\Tunnel;
 use Eta\Core\Debug;
+use Eta\Exception\RuntimeException;
 
 class Mysql extends Adapter {
 
@@ -84,7 +85,7 @@ class Mysql extends Adapter {
         }
         $isOk = preg_match("/[a-z0-9_-]/i",$tableName);
         if(!$isOk) {
-            throw new Exception("Trying to describe table which name is not well-formated");
+            throw new RuntimeException("Trying to describe table which name is not well-formated");
         }
         $result = $this->_exec("DESCRIBE $tableName", []);
         $fields = $result->fetchAll(\PDO::FETCH_ASSOC);
