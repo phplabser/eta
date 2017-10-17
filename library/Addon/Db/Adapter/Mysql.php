@@ -25,12 +25,25 @@ class Mysql extends Adapter {
      */
     protected $unbufferedPdo = null;
 
+    protected function checkConnection(\PDO $pdo) {
+        try {
+            $sql = "SELECT 'connected'";
+            $pdo->prepare($sql)->execute();
+            return true;
+        } catch (\Exception $e) {
+            error_log('catched!');
+            return false;
+        }
+    }
+
     /**
      * @return \PDO
      */
     protected function getDb($newUnbuffered = false) {
         if(!$newUnbuffered) {
-            if ($this->pdo) return $this->pdo;
+            if ($this->pdo && $this->checkConnection($this->pdo)) {
+                return $this->pdo;
+            }
         }
 
         $pdo = null;

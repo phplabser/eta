@@ -28,7 +28,9 @@ class MysqlMulti extends Mysql
 
     protected function getDbServer($serverName, $useUnbuffered = false) {
         if(!$useUnbuffered) {
-            if (isset($this->pdo[$serverName])) return $this->pdo[$serverName];
+            if (isset($this->pdo[$serverName]) && $this->checkConnection($this->pdo[$serverName])) {
+                return $this->pdo[$serverName];
+            }
         }
 
         $configData = Config::getInstance()->get('database','servers',$serverName);
