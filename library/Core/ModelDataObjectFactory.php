@@ -51,6 +51,10 @@ abstract class ModelDataObjectFactory extends Base {
         return $array;
     }
 
+    public static function getCount() {
+        return self::$_db->getOne("SELECT count(*) FROM ".static::getTableName());
+    }
+
     public static function removeChild($childId) {
         if(!static::getPrimaryKey()) {
             throw new RuntimeException("Factory not configured properly. Cannot retrive primary key name from getPrimaryKey function.", 500);
