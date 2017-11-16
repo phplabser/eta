@@ -28,7 +28,9 @@ class Mysql extends Adapter {
     protected function checkConnection(\PDO $pdo) {
         try {
             $sql = "SELECT 'connected'";
-            $pdo->prepare($sql)->execute();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $stmt->fetch();
             return true;
         } catch (\Exception $e) {
             error_log('catched!');
