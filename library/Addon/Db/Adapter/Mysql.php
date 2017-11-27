@@ -38,6 +38,10 @@ class Mysql extends Adapter {
         }
     }
 
+    public function disconnect() {
+        $this->pdo = null;
+    }
+
     /**
      * @return \PDO
      */

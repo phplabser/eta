@@ -26,6 +26,10 @@ class MysqlMulti extends Mysql
         return $newUnbuffered ? $this->unbufferedPdo : $this->pdo[self::$lastResolvedServer];
     }
 
+    public function disconnect() {
+        $this->pdo = [];
+    }
+
     protected function getDbServer($serverName, $useUnbuffered = false) {
         if(!$useUnbuffered) {
             if (isset($this->pdo[$serverName]) && $this->checkConnection($this->pdo[$serverName])) {
