@@ -128,7 +128,6 @@ class MysqlMulti extends Mysql
     protected function _exec($sql, $bind, $useUnbuffered = false) {
         $server = $this->resolveServer($sql);
 
-        Debug::putToLog($sql . " [". var_export($bind,true)."]");
         $stmt = $this->getDbServer($server, $useUnbuffered)->prepare($sql);
         $stmt->execute($bind);
         return $stmt;

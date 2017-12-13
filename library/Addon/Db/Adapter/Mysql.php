@@ -190,7 +190,6 @@ class Mysql extends Adapter {
      * @return \PDOStatement
      */
     protected function _exec($sql, $bind, $useUnbuffered = false) {
-        Debug::putToLog($sql . " [ ". var_export($bind,true)."]");
         $stmt = $this->getDb($useUnbuffered)->prepare($sql);
         $stmt->execute($bind);
         return $stmt;
