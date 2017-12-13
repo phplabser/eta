@@ -135,7 +135,7 @@ class Mysql extends Adapter {
 
     public function getColumn($sql, $bind = []) {
         $rows = $this->getAll($sql, $bind);
-        while(list($k,$v) = each($rows)) {
+        foreach($rows as $k=>$v) {
             $rows[$k] = reset($v);
         }
         return $rows;

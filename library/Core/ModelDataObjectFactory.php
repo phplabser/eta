@@ -44,7 +44,7 @@ abstract class ModelDataObjectFactory extends Base {
     protected static function buildObjects(Array $array) {
         $childrenClass = static::getChildrenClass();
         reset($array);
-        while(list($k,$v) = each($array)) {
+        foreach($array as $k=>$v) {
             $array[$k] = new $childrenClass($v);
         }
 
