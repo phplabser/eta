@@ -184,8 +184,8 @@ abstract class ModelDataObjectFactory extends Base {
             } else {
                 $w = $whereClause;
             }
+            $sql .= " WHERE ".$w;
         }
-        if(count($w)) $sql .= " WHERE ".$w;
         $method = "get".ucfirst($type);
         return self::$_db->$method($sql,$whereClause);
     }
