@@ -113,8 +113,9 @@ class Dispatcher extends Singleton {
 	
 	protected function getUri($trimQueryString = false): string {
         $uri = $_SERVER['REQUEST_URI'] ?? $_SERVER['argv'][1] ?? "";
+        $qs = $_SERVER['QUERY_STRING'] ?? "";
         if($trimQueryString && php_sapi_name()!='cli') {
-            $uri = str_replace("?".$_SERVER['QUERY_STRING'],"",$_SERVER['REQUEST_URI']);
+            $uri = str_replace("?".$qs,"",$_SERVER['REQUEST_URI']);
         }
         $uri = rtrim(trim($uri),"/");
         return $uri;
