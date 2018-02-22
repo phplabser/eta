@@ -154,9 +154,12 @@ class Response extends Singleton {
 
     protected $headers = [];
 
+    protected $responseCodeSet = null;
+
     public function setResponse($code) {
         if(isset($this->reasonPhrases[$code])) {
             $this->addHeader("HTTP/1.1 $code ".$this->reasonPhrases[$code]);
+            $this->responseCodeSet = $code;
         }
     }
 
@@ -174,7 +177,7 @@ class Response extends Singleton {
     }
 
     public function getResponse() {
-        return http_response_code();
+        return $this->responseCodeSet ?? http_response_code();
     }
 
     public function addHeader($header) {

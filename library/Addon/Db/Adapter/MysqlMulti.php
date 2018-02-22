@@ -61,7 +61,6 @@ class MysqlMulti extends Mysql
             );
         }
 
-
         if($useUnbuffered) {
             $pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         }
@@ -77,7 +76,6 @@ class MysqlMulti extends Mysql
             $this->pdo[$serverName] = $pdo;
             return $this->pdo[$serverName];
         }
-
     }
 
     public function execDML($sql, $bind = []) {
