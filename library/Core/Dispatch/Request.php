@@ -85,6 +85,11 @@ class Request extends Singleton {
         die();
     }
 
+    public function moved($url) {
+        header("Location: ".$url,null,301);
+        die();
+    }
+
     public function getRawData($returnAsParamsArray = false) {
         if(!$this->rawData) {
             $fh  = fopen("php://input", "r");
