@@ -19,9 +19,9 @@ use Eta\Interfaces\PostRendererInterface;
 use Eta\Model\Singleton;
 
 class Renderer extends Singleton {
-	
-	protected $params = [];
-	protected static $layout = null;
+
+    protected $params = [];
+    protected static $layout = null;
 
     protected $pageTitle = "";
     protected $pageDescription = "";
@@ -43,71 +43,54 @@ class Renderer extends Singleton {
         $this->forcedTemplate = $template;
     }
 
-    public function renderError($module) {
-
+    public function render($route,$module,$params = [],$return=false) {
+        $this->addParams($params);
         $layouts = Config::getInstance()->get('layouts');
-        if(isset($layouts['error'])) {
-            $module = 'error';
-        }
 
-        if (isset($layouts["error/".Response::getInstance()->getResponse()])) {
-            $templatePath = $layouts["error/".Response::getInstance()->getResponse()];
-        } else {
-            if (isset($layouts["error"])) {
-                $templatePath = $layouts["error"];
+        if (Response::getInstance()->getResponseType() == Response::STATUS_OK || Response::getInstance()->getResponseType() == Response::STATUS_REDIRECTION) {
+            if($this->forcedTemplate !== null) {
+                $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $this->forcedTemplate . ".phtml";
             } else {
-                Debug::raiseError(
-                    "Internal server error! "
-                    . Response::getInstance()->getResponseType() . " - "
-                    . Response::getInstance()->getResponse() . " - "
-                    . Response::getInstance()->getResponseReason() . " - request: "
-                    . Request::getInstance()->getParam('request_uri')
-                    , Debug::ETA_ERROR_FATAL
-                );
+                $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $module. DIRECTORY_SEPARATOR . "views". DIRECTORY_SEPARATOR . strtolower($route['route']['controller']). DIRECTORY_SEPARATOR .strtolower($route['route']['action']).".phtml";
+            }
+
+
+        } else {
+            if(isset($layouts['error'])) {
+                $module = 'error';
+            }
+            if (isset($layouts["error/".Response::getInstance()->getResponse()])) {
+                $templatePath = $layouts["error/".Response::getInstance()->getResponse()];
+            } else {
+                if (isset($layouts["error"])) {
+                    $templatePath = $layouts["error"];
+                } else {
+                    Debug::raiseError(
+                        "Internal server error! "
+                        . Response::getInstance()->getResponseType() . " - "
+                        . Response::getInstance()->getResponse() . " - "
+                        . Response::getInstance()->getResponseReason() . " - request: "
+                        . Request::getInstance()->getParam('request_uri')
+                        , Debug::ETA_ERROR_FATAL
+                    );
+                }
             }
         }
 
+
         $tpl = $this->includeTpl($templatePath);
         $this->initLayout($module);
-        $this->params['templateContent'] = $tpl;
-        $tpl = $this->includeTpl(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
-        $tpl = $this->postRender($tpl);
-        echo $tpl;
-    }
-
-	public function render($route,$module,$params = [],$return=false) {
-        if (Response::getInstance()->getResponseType() != Response::STATUS_OK && Response::getInstance()->getResponseType() != Response::STATUS_REDIRECTION) {
-            $this->renderError($module);
-            return null;
-        }
-
-        $this->addParams($params);
-
-        if($this->forcedTemplate !== null) {
-            $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $this->forcedTemplate . ".phtml";
-        } else {
-            $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $module. DIRECTORY_SEPARATOR . "views". DIRECTORY_SEPARATOR . strtolower($route['route']['controller']). DIRECTORY_SEPARATOR .strtolower($route['route']['action']).".phtml";
-        }
-
-        $tpl = $this->includeTpl($templatePath);
-		$this->initLayout($module);
 
         if(!$this->useLayout) {
             self::$layout = null;
             $this->useLayout = true;
         }
-		
-		if(self::$layout) {
-			$this->params['templateContent'] = $tpl;
+
+        if(self::$layout) {
+            $this->params['templateContent'] = $tpl;
             $tpl = $this->includeTpl(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
-		}
+        }
 
-        $tpl = $this->postRender($tpl);
-        if($return) return $tpl;
-        echo $tpl;
-    }
-
-    protected function postRender($tpl) {
         if(count($this->postRenderer)) {
             foreach ($this->postRenderer as $renderer) {
                 $renderer = new $renderer();
@@ -117,7 +100,8 @@ class Renderer extends Singleton {
                 $tpl = $renderer->render($tpl);
             }
         }
-        return $tpl;
+        if($return) return $tpl;
+        echo $tpl;
     }
 
     protected function includeTpl($tpl) {
@@ -146,7 +130,7 @@ class Renderer extends Singleton {
 
     public function registerHelper($name, $class) {
         $this->helpers[$name] = $class;
-		return $this;
+        return $this;
     }
 
     public function registerPostRenderer($name, $class) {
@@ -166,33 +150,33 @@ class Renderer extends Singleton {
         return $helper->execute(...$params);
     }
 
-	public function __get($name) {
-		if(isset($this->params[$name])) {
-			return $this->params[$name];
-		}
-	}
-	
-	public function setLayout($layout) {
-		self::$layout = $layout;
-	}
+    public function __get($name) {
+        if(isset($this->params[$name])) {
+            return $this->params[$name];
+        }
+    }
+
+    public function setLayout($layout) {
+        self::$layout = $layout;
+    }
 
     public function setNoLayout() {
         $this->useLayout = false;
     }
-	
-	protected function initLayout($module) {
-		$module = strtolower($module);
+
+    protected function initLayout($module) {
+        $module = strtolower($module);
         $layouts = Config::getInstance()->get("layouts");
-		if(!$layouts) return $this;
+        if(!$layouts) return $this;
 
-		if(isset($layouts[$module])) {
-			self::$layout = $layouts[$module];
-		} else {
-			self::$layout = isset($layouts['default']) ? $layouts['default'] : null;
-		}
+        if(isset($layouts[$module])) {
+            self::$layout = $layouts[$module];
+        } else {
+            self::$layout = isset($layouts['default']) ? $layouts['default'] : null;
+        }
 
-		return $this;
-	}
+        return $this;
+    }
 
     public function setPageTitle($title) {
         $this->pageTitle = $title;
@@ -211,5 +195,5 @@ class Renderer extends Singleton {
     public function getPageDescription() {
         return $this->pageDescription;
     }
-	
+
 }
