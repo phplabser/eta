@@ -161,6 +161,7 @@ class Response extends Singleton {
             $this->addHeader("HTTP/1.1 $code ".$this->reasonPhrases[$code]);
             $this->responseCodeSet = $code;
         }
+        return $this;
     }
 
     public function getResponseReason() {
@@ -182,12 +183,14 @@ class Response extends Singleton {
 
     public function addHeader($header) {
         $this->headers[] = $header;
+        return $this;
     }
 
     public function sendHeaders() {
         foreach($this->headers as $header) {
             header($header);
         }
+        return $this;
     }
 
 }
