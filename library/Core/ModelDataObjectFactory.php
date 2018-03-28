@@ -88,6 +88,117 @@ abstract class ModelDataObjectFactory extends Base {
         return self::$count;
     }
 
+    /**
+     * Find rows by parameters
+     *
+     * @param array $parameters
+     * @param array $order
+     * @param null $limit
+     * @param null $offset
+     * @return array
+     *
+     *
+     */
+    public static function find(Array $parameters, Array $order = [], $limit = null, $offset = null)
+    {
+        if (!$parameters && !$order && !$limit && !$offset) {
+            throw new RuntimeException("No parameters nor order nor limit nor offset provided to getByParameters.", 500);
+        }
+
+        if ((count($parameters) || count($order)) && !count(static::getTableFields())) {
+            throw new RuntimeException("In case using \$parameters or \$order parameter getTableFields() must return all of table fields", 500);
+        }
+
+        $traverse =
+            function ($i, $parentKey = '$AND', $level = 1, &$iteration = 0) use (&$traverse) {
+                $conjuctive = [
+                        '$OR' => 'OR'
+                    ][trim($parentKey)] ?? "AND";
+                $conditions = [];
+                $values     = [];
+                while ($i->valid()) {
+                    $iteration++;
+                    if ($i->hasChildren()) {
+                        $resp         = $traverse($i->getChildren(), $i->key(), $level + 1, $iteration);
+                        $conditions[] = $resp['sql'];
+                        $values       = array_merge($values, $resp['values']);
+                    } else {
+                        $sign = [
+                                "?" => "LIKE",
+                                "!" => "<>",
+                                ">" => ">",
+                                "<" => "<",
+                                "=" => "="
+                            ][substr($i->key(), -1, 1)]
+                            ?? [
+                                ">=" => ">=",
+                                "<=" => "<=",
+                            ][substr($i->key(), -2, 2)]
+                            ?? "=";
+
+                        $value          = "v" . $level . "i" . $iteration;
+                        $conditions[]   = join(" ", [trim($i->key(), "?!><= "), $sign, ":" . $value]);
+                        $values[$value] = $i->current();
+                    }
+                    $i->next();
+                }
+
+                $sql = join(" " . $conjuctive . " ", $conditions);
+
+                if ($level != 1) $sql = "(" . $sql . ")";
+
+                return [
+                    'sql'    => $sql,
+                    'values' => $values
+                ];
+            };
+
+        $iterator = new \RecursiveArrayIterator($parameters);
+        $result   = $traverse($iterator);
+
+        $sql      = $result['sql'] ? " WHERE ".$result['sql'] : "";
+        $limit    = (int)$limit;
+        $offset   = (int)$offset;
+
+        if (count($order)) {
+            $o = [];
+            foreach ($order as $k => $v) {
+                if (in_array($k, static::getTableFields())) {
+                    $v = strtoupper($v);
+                    if (in_array($v, ['ASC', 'DESC'])) {
+                        $o[] = "$k $v";
+                    }
+                }
+            }
+            if (count($o)) {
+                $sql .= " ORDER BY " . join(',', $o);
+            }
+        }
+
+        $sqlCount    = "SELECT count(*) FROM " . static::getTableName() . " " . $sql;
+        self::$count = static::$_db->getOne($sqlCount, $result['values']);
+
+        if ($limit) $sql .= " LIMIT $limit";
+        if ($offset) $sql .= " OFFSET $offset";
+
+        $sqlReq = "SELECT * FROM " . static::getTableName() . " " . $sql;
+        $rows   = static::$_db->getAll($sqlReq, $result['values']);
+
+        return self::buildObjects($rows);
+
+    }
+
+
+    /**
+     * @deprecated
+     *
+     * @param array $parameters
+     * @param array $order
+     * @param null $limit
+     * @param null $offset
+     * @param array $searchParams
+     * @return array
+     */
     public static function getByParameters(Array $parameters = [], Array $order = [], $limit = null, $offset = null, Array $searchParams = []) {
         $sql = "";
 
