@@ -161,7 +161,7 @@ class Mysql extends Adapter {
             if($item === 'null') $item = null;
         });
         $sql = "INSERT INTO $tableName ";
-        $sql .= "(".join(",",$fields).") VALUE (:".join(",:",$fields).")";
+        $sql .= "(".join(",",$fields).") VALUES (:".join(",:",$fields).")";
 
         $stmt = $this->getDb()->prepare($sql);
         return $stmt->execute($parameters);

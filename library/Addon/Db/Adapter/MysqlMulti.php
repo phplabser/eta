@@ -96,7 +96,7 @@ class MysqlMulti extends Mysql
             if($item === 'null') $item = null;
         });
         $sql = "INSERT INTO $tableName ";
-        $sql .= "(".join(",",$fields).") VALUE (:".join(",:",$fields).")";
+        $sql .= "(".join(",",$fields).") VALUES (:".join(",:",$fields).")";
 
         $server = $this->resolveServer($sql);
         $stmt = $this->getDbServer($server)->prepare($sql);

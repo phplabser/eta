@@ -45,9 +45,7 @@ class Sqlite3 extends Mysql {
         if($newUnbuffered) {
             $pdo->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         }
-
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
 
         if(!$newUnbuffered) {
             $this->pdo = $pdo;
