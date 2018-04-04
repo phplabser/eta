@@ -14,8 +14,8 @@ class Config {
     private $configData = [];
 
     final public function __construct(Array $config) {
-        if(!isset($config['host']) || !isset($config['port']) || !isset($config['user']) || !isset($config['password'])) {
-            throw new Exception("Provided config array for adapter must have at least adapter, host, port, user, password.");
+        if(!isset($config['file']) || (!isset($config['host']) || !isset($config['port']) || !isset($config['user']) || !isset($config['password']))) {
+            throw new Exception("Provided config array for adapter must have at least adapter, host, port, user, password or file.");
         }
         $this->configData = $config;
     }
