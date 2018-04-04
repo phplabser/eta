@@ -69,7 +69,7 @@ class Config {
 
     final public function getDsn($withCredentials = false, $forceAdapterName = "") : string {
 
-        if($this->getAdapterName() === "sqlite") {
+        if($this->getAdapterName() === "Sqlite3") {
             return "sqlite:".$this->configData['file'];
         }
 
