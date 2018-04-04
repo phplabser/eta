@@ -67,7 +67,12 @@ class Config {
         return isset($this->configData['use_tunnel']) ? $this->configData['use_tunnel'] : null;
     }
 
-    final public function getDsn($withCredentials = false,$forceAdapterName = "") : string {
+    final public function getDsn($withCredentials = false, $forceAdapterName = "") : string {
+
+        if($this->getAdapterName() === "sqlite") {
+            return "sqlite:".$this->configData['file'];
+        }
+
         return
             strtolower($forceAdapterName ? $forceAdapterName : $this->configData['adapter']).":"
             . "host=".$this->configData['host']

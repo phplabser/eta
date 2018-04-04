@@ -57,9 +57,9 @@ class Mysql extends Adapter {
         if($this->getConfig()->hasTunneledConnection()) {
             try {
                 $pdo = new \PDO(
-                    $this-getConfig()->getDsn(false, 'mysql'),
-                    $this-getConfig()->getUser(),
-                    $this-getConfig()->getPassword()
+                    $this->getConfig()->getDsn(false, 'mysql'),
+                    $this->getConfig()->getUser(),
+                    $this->getConfig()->getPassword()
                 );
             } catch (\PDOException $e) {
                 $tunnel = new Tunnel($this-getConfig()->getTunnelName());
