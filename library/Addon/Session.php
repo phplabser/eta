@@ -20,8 +20,9 @@ class Session extends Singleton {
 
     protected function __construct() {
         $backend = Config::getInstance()->get("session","backend");
+        $custom = Config::getInstance()->get("session","custom");
         if($backend) {
-            $backendClass = "Eta\\Addon\\Session\\".$backend;
+            $backendClass = $custom ? $backend : "Eta\\Addon\\Session\\".$backend;
             if (!is_subclass_of($backendClass,"\\SessionHandlerInterface")) {
                 throw new RuntimeException("Session backend must implements SessionHandlerInterface");
             }
