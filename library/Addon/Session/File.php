@@ -11,7 +11,7 @@ namespace Eta\Addon\Session;
 class File implements \SessionHandlerInterface {
 
     protected $lifetime = 900;
-    protected $savePath = "application/session";
+    protected $savePath = "application/data/session";
 
     public function open($savePath, $sessionName)
     {
