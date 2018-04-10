@@ -12,82 +12,101 @@ namespace Eta\Core;
 use Eta\Exception\RuntimeException;
 use Eta\Model\Base;
 
-abstract class ModelDataObjectFactory extends Base {
+abstract class ModelDataObjectFactory extends Base
+{
 
     const SELECT_ALL = 'all';
     const SELECT_ROW = 'row';
     const SELECT_ONE = 'one';
 
     protected static $count = 0;
+
     /**
      * @var \Eta\Addon\Db\Adapter
      */
 
-    protected static function getChildrenClass() {
-        return substr(static::class,0,strrpos(static::class,"\\"));
+    protected static function getChildrenClass()
+    {
+        return substr(static::class, 0, strrpos(static::class, "\\"));
     }
 
-    protected static function getPrimaryKey() : string {
+    protected static function getPrimaryKey(): string
+    {
         return 'id';
     }
 
-    protected static function getTableName() : string {
+    protected static function getTableName(): string
+    {
         $childrenClass = static::getChildrenClass();
-        $tableName = substr($childrenClass,strrpos($childrenClass,"\\")+1);
-        $tableName = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $tableName));
 
-        return $tableName;
+        $className = explode("\\", trim($childrenClass, "\\"));
+        unset($className[0], $className[1]); // module\Model
+        $className = join("", $className);
+        $className = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $className));
+
+        return $className;
     }
 
-    protected static function getTableFields()  {
+    protected static function getTableFields()
+    {
         $fields = static::$_db->describe(static::getTableName());
-        return array_column($fields,'Field');
+
+        return array_column($fields, 'Field');
     }
 
-    protected static function buildObjects(Array $array) {
+    protected static function buildObjects(Array $array)
+    {
         $childrenClass = static::getChildrenClass();
         reset($array);
-        foreach($array as $k=>$v) {
+        foreach ($array as $k => $v) {
             $array[$k] = new $childrenClass($v);
         }
 
         return $array;
     }
 
-    public static function getCount() {
-        return self::$_db->getOne("SELECT count(*) FROM ".static::getTableName());
+    public static function getCount()
+    {
+        return self::$_db->getOne("SELECT count(*) FROM " . static::getTableName());
     }
 
-    public static function removeChild($childId) {
-        if(!static::getPrimaryKey()) {
+    public static function removeChild($childId)
+    {
+        if (!static::getPrimaryKey()) {
             throw new RuntimeException("Factory not configured properly. Cannot retrive primary key name from getPrimaryKey function.", 500);
         }
-        $sql = "DELETE FROM ". static::getTableName() . " WHERE " . static::getPrimaryKey() . " = :id";
-        static::$_db->execDML($sql,['id'=>$childId]);
+        $sql = "DELETE FROM " . static::getTableName() . " WHERE " . static::getPrimaryKey() . " = :id";
+        static::$_db->execDML($sql, ['id' => $childId]);
+
         return true;
     }
 
 
-    public static function getAll() {
-        $sql = "SELECT * FROM ".static::getTableName();
+    public static function getAll()
+    {
+        $sql  = "SELECT * FROM " . static::getTableName();
         $rows = static::$_db->getAll($sql);
+
         return self::buildObjects($rows);
     }
 
-    public static function getById($ids) {
+    public static function getById($ids)
+    {
         $parameters = [];
-        $sql = "SELECT * FROM " . static::getTableName() . " WHERE " . static::getPrimaryKey();
-        if(is_array($ids)) {
-            $sql .= " IN ('".join("','",$ids)."')";
+        $sql        = "SELECT * FROM " . static::getTableName() . " WHERE " . static::getPrimaryKey();
+        if (is_array($ids)) {
+            $sql .= " IN ('" . join("','", $ids) . "')";
         } else {
-            $sql .= " = :id";
+            $sql        .= " = :id";
             $parameters = ["id" => $ids];
         }
-        $rows = static::$_db->getAll($sql,$parameters);
+        $rows = static::$_db->getAll($sql, $parameters);
+
         return self::buildObjects($rows);
     }
 
-    public static function getTotalCount() {
+    public static function getTotalCount()
+    {
         return self::$count;
     }
 
@@ -159,9 +178,9 @@ abstract class ModelDataObjectFactory extends Base {
         $iterator = new \RecursiveArrayIterator($parameters);
         $result   = $traverse($iterator);
 
-        $sql      = $result['sql'] ? " WHERE ".$result['sql'] : "";
-        $limit    = (int)$limit;
-        $offset   = (int)$offset;
+        $sql    = $result['sql'] ? " WHERE " . $result['sql'] : "";
+        $limit  = (int)$limit;
+        $offset = (int)$offset;
 
         if (count($order)) {
             $o = [];
@@ -202,15 +221,16 @@ abstract class ModelDataObjectFactory extends Base {
      * @param array $searchParams
      * @return array
      */
-    public static function getByParameters(Array $parameters = [], Array $order = [], $limit = null, $offset = null, Array $searchParams = []) {
+    public static function getByParameters(Array $parameters = [], Array $order = [], $limit = null, $offset = null, Array $searchParams = [])
+    {
         $sql = "";
 
         $fields = static::getTableFields();
 
-        if($limit) $limit = (int)$limit;
-        if($offset) $offset = (int)$offset;
+        if ($limit) $limit = (int)$limit;
+        if ($offset) $offset = (int)$offset;
 
-        if(count($parameters)) {
+        if (count($parameters)) {
             if (!count($fields)) {
                 throw new RuntimeException("In case using \$parameters parameter getTableFields() must return all of table fields", 500);
             }
@@ -218,79 +238,81 @@ abstract class ModelDataObjectFactory extends Base {
             foreach ($keys as $k => $v) {
                 $keys[$k] = "$v = :$v";
             }
-            $sql .= " WHERE ".join(" AND ", $keys);
+            $sql .= " WHERE " . join(" AND ", $keys);
         }
 
-        if(count($searchParams)) {
+        if (count($searchParams)) {
             $tmp = [];
             foreach ($searchParams as $field => $val) {
-                $fieldBindName = "_search_" . preg_replace('/[^[:alnum:]]/', '_', $field);
-                $tmp[] = $field . " LIKE :" . $fieldBindName;
+                $fieldBindName          = "_search_" . preg_replace('/[^[:alnum:]]/', '_', $field);
+                $tmp[]                  = $field . " LIKE :" . $fieldBindName;
                 $params[$fieldBindName] = $val;
             }
-            $sql .= (count($parameters) ? " AND " : " WHERE ") . " (" . implode(" OR ", $tmp) . ")";
+            $sql        .= (count($parameters) ? " AND " : " WHERE ") . " (" . implode(" OR ", $tmp) . ")";
             $parameters = array_merge($parameters, $params);
         }
 
-        if(count($order)) {
+        if (count($order)) {
             $o = [];
-            if(!count($fields)) {
-                throw new RuntimeException("In case using \$order parameter getTableFields() must return all of table fields",500);
+            if (!count($fields)) {
+                throw new RuntimeException("In case using \$order parameter getTableFields() must return all of table fields", 500);
             }
-            foreach($order as $k=>$v) {
-                if(in_array($k,$fields)) {
+            foreach ($order as $k => $v) {
+                if (in_array($k, $fields)) {
                     $v = strtoupper($v);
 
-                    if (in_array($v , ['ASC', 'DESC'])) {
+                    if (in_array($v, ['ASC', 'DESC'])) {
                         $o[] = "$k $v";
                     }
                 }
             }
-            if(count($o)) {
-                $sql .= " ORDER BY ".join(',', $o);
+            if (count($o)) {
+                $sql .= " ORDER BY " . join(',', $o);
             }
         }
 
 
-        if(!$parameters && !$order && !$limit && !$offset) {
-            throw new RuntimeException("No parameters nor order nor limit nor offset provided to getByParameters.",500);
+        if (!$parameters && !$order && !$limit && !$offset) {
+            throw new RuntimeException("No parameters nor order nor limit nor offset provided to getByParameters.", 500);
         }
 
-        $sqlCount = "SELECT count(*) FROM ".static::getTableName() ." ". $sql;
+        $sqlCount = "SELECT count(*) FROM " . static::getTableName() . " " . $sql;
 
         self::$count = static::$_db->getOne($sqlCount, $parameters);
 
-        if($limit) {
+        if ($limit) {
             $sql .= " LIMIT $limit";
         }
-        if($offset) {
+        if ($offset) {
             $sql .= " OFFSET $offset";
         }
 
-        $sqlReq = "SELECT * FROM ".static::getTableName() ." ". $sql;
+        $sqlReq = "SELECT * FROM " . static::getTableName() . " " . $sql;
 
-        $rows = static::$_db->getAll($sqlReq,$parameters);
+        $rows = static::$_db->getAll($sqlReq, $parameters);
+
         return self::buildObjects($rows);
     }
 
-    protected static function select($whereClause = null, $type = self::SELECT_ALL, $fields = null) {
-        $types = ['all','row','one'];
-        $type = in_array($type,$types) ? $type : self::SELECT_ALL;
-        $w = [];
-        if($fields) {
+    protected static function select($whereClause = null, $type = self::SELECT_ALL, $fields = null)
+    {
+        $types = ['all', 'row', 'one'];
+        $type  = in_array($type, $types) ? $type : self::SELECT_ALL;
+        $w     = [];
+        if ($fields) {
             foreach ($fields as &$field) {
-                if(!in_array($field,static::getTableFields())) {
+                if (!in_array($field, static::getTableFields())) {
                     throw new RuntimeException("No field in getTableFields().");
                 }
             }
-            $fields = join(", ",$fields);
+            $fields = join(", ", $fields);
         } else {
             $fields = "*";
         }
 
-        $sql = "SELECT ".$fields." FROM " . static::getTableName();
-        if($whereClause) {
-            if(is_array($whereClause)){
+        $sql = "SELECT " . $fields . " FROM " . static::getTableName();
+        if ($whereClause) {
+            if (is_array($whereClause)) {
                 foreach ($whereClause as $k => $v) {
                     $w[] = "$k = :$k";
                 }
@@ -298,9 +320,10 @@ abstract class ModelDataObjectFactory extends Base {
             } else {
                 $w = $whereClause;
             }
-            $sql .= " WHERE ".$w;
+            $sql .= " WHERE " . $w;
         }
-        $method = "get".ucfirst($type);
-        return self::$_db->$method($sql,$whereClause);
+        $method = "get" . ucfirst($type);
+
+        return self::$_db->$method($sql, $whereClause);
     }
 } 
