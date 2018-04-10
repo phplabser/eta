@@ -8,13 +8,15 @@
 
 namespace Eta\Addon\Session;
 
-class File implements \SessionHandlerInterface {
+class File implements \SessionHandlerInterface
+{
 
     protected $lifetime = 900;
     protected $savePath = "application/data/session";
 
     public function open($savePath, $sessionName)
     {
+        $this->savePath = $savePath;
         if (!is_dir($this->savePath)) {
             mkdir($this->savePath, 0777);
         }
@@ -29,12 +31,12 @@ class File implements \SessionHandlerInterface {
 
     public function read($id)
     {
-        return (string)@file_get_contents("$this->savePath/sess_$id");
+        return (string)@file_get_contents($this->savePath . "/sess_$id");
     }
 
     public function write($id, $data)
     {
-        return file_put_contents("$this->savePath/sess_$id", $data) === false ? false : true;
+        return file_put_contents($this->savePath . "/sess_$id", $data) === false ? false : true;
     }
 
     public function destroy($id)
@@ -49,7 +51,7 @@ class File implements \SessionHandlerInterface {
 
     public function gc($maxlifetime)
     {
-        foreach (glob("$this->savePath/sess_*") as $file) {
+        foreach (glob($this->savePath . "/sess_*") as $file) {
             if (filemtime($file) + $maxlifetime < time() && file_exists($file)) {
                 unlink($file);
             }
