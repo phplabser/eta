@@ -9,6 +9,7 @@
 
 namespace Eta\Core;
 
+use Eta\Core\Dispatch\Request;
 use Eta\Model\Singleton;
 
 class Config extends Singleton{
@@ -30,5 +31,15 @@ class Config extends Singleton{
         }
         return $config;
 	}
+
+    public static function getDocumentRoot() {
+        return Request::getInstance()->getParam('document_root');
+    }
+
+    public static function getApplicationRoot() {
+        $documentRoot = Request::getInstance()->getParam('document_root');
+        $documentRoot = "/".trim($documentRoot,"/ ")."/../";
+        return realpath($documentRoot);
+    }
 	
 }
