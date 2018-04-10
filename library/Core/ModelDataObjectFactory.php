@@ -10,7 +10,6 @@ namespace Eta\Core;
 
 
 use Eta\Exception\RuntimeException;
-use Eta\Addon\Db\Adapter;
 use Eta\Model\Base;
 
 abstract class ModelDataObjectFactory extends Base {

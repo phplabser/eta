@@ -42,11 +42,8 @@ abstract class ModelDataObject extends Base implements \ArrayAccess, \JsonSerial
     }
 
     protected static function getTableName() : string {
-        $className = explode("\\",static::class);
-        $className = lcfirst(end($className));
-        $className = preg_replace_callback("/([A-Z]{1})/",function($matches) {
-            return "_".strtolower($matches[1]);
-        },$className);
+        $className = substr(static::class,strrpos(static::class,"\\")+1);
+        $className = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $className));
 
         return $className;
     }
