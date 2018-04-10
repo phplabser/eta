@@ -25,7 +25,7 @@ abstract class ModelDataObjectFactory extends Base {
      */
 
     protected static function getChildrenClass() {
-        return "\\StdClass";
+        return substr(static::class,0,strrpos(static::class,"\\"));
     }
 
     protected static function getPrimaryKey() : string {
@@ -33,7 +33,11 @@ abstract class ModelDataObjectFactory extends Base {
     }
 
     protected static function getTableName() : string {
-        return '';
+        $childrenClass = static::getChildrenClass();
+        $tableName = substr($childrenClass,strrpos($childrenClass,"\\"));
+        $tableName = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $tableName));
+
+        return $tableName;
     }
 
     protected static function getTableFields()  {
