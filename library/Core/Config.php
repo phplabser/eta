@@ -20,7 +20,7 @@ class Config extends Singleton{
         $config = require_once("application/config/application.php");
         $common = $config['common'] ?? [];
         $env = $config[Debug::getAppEnv()] ?? [];
-        self::$config = array_merge($common,$env);
+        self::$config = array_merge_recursive($common,$env);
     }
 
 	public function get(...$names) {
