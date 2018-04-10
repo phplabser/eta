@@ -34,7 +34,7 @@ abstract class ModelDataObjectFactory extends Base {
 
     protected static function getTableName() : string {
         $childrenClass = static::getChildrenClass();
-        $tableName = substr($childrenClass,strrpos($childrenClass,"\\"));
+        $tableName = substr($childrenClass,strrpos($childrenClass,"\\")+1);
         $tableName = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $tableName));
 
         return $tableName;
