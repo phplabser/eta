@@ -48,7 +48,7 @@ class Bootstrap {
         foreach ($this->getSearchPathStack() as $path) {
             if (file_exists($path . $class)) {
                 include $path . $class;
-                if (!class_exists($className) && !interface_exists($className)) {
+                if (!class_exists($className) && !interface_exists($className) && !trait_exists($className)) {
                     throw new RuntimeException("File loaded but class not found! ($class)", 100);
                 }
                 return;
