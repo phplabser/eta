@@ -47,66 +47,81 @@ class Renderer extends Singleton
         $this->forcedTemplate = $template;
     }
 
-    public function render($route, $module, $params = [], $return = false)
-    {
-        $this->addParams($params);
+    public function renderError($module) {
+
         $layouts = Config::getInstance()->get('layouts');
+        if(isset($layouts['error'])) {
+            $module = 'error';
+        }
 
-        if (Response::getInstance()->getResponseType() == Response::STATUS_OK || Response::getInstance()->getResponseType() == Response::STATUS_REDIRECTION) {
-            if ($this->forcedTemplate !== null) {
-                $templatePath = "application" . DIRECTORY_SEPARATOR . "module" . DIRECTORY_SEPARATOR . $this->forcedTemplate . ".phtml";
-            } else {
-                $templatePath = "application" . DIRECTORY_SEPARATOR . "module" . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . strtolower($route['route']['controller']) . DIRECTORY_SEPARATOR . strtolower($route['route']['action']) . ".phtml";
-            }
-
-
+        if (isset($layouts["error/".Response::getInstance()->getResponse()])) {
+            $templatePath = $layouts["error/".Response::getInstance()->getResponse()];
         } else {
-            if (isset($layouts['error'])) {
-                $module = 'error';
-            }
-            if (isset($layouts["error/" . Response::getInstance()->getResponse()])) {
-                $templatePath = $layouts["error/" . Response::getInstance()->getResponse()];
+            if (isset($layouts["error"])) {
+                $templatePath = $layouts["error"];
             } else {
-                if (isset($layouts["error"])) {
-                    $templatePath = $layouts["error"];
-                } else {
-                    Debug::raiseError(
-                        "Internal server error! "
-                        . Response::getInstance()->getResponseType() . " - "
-                        . Response::getInstance()->getResponse() . " - "
-                        . Response::getInstance()->getResponseReason() . " - request: "
-                        . Request::getInstance()->getParam('request_uri')
-                        , Debug::ETA_ERROR_FATAL
-                    );
-                }
+                Debug::raiseError(
+                    "Internal server error! "
+                    . Response::getInstance()->getResponseType() . " - "
+                    . Response::getInstance()->getResponse() . " - "
+                    . Response::getInstance()->getResponseReason() . " - request: "
+                    . Request::getInstance()->getParam('request_uri')
+                    , Debug::ETA_ERROR_FATAL
+                );
             }
         }
 
+        $tpl = $this->includeTpl($templatePath);
+        $this->initLayout($module);
+        $this->params['templateContent'] = $tpl;
+        $tpl = $this->includeTpl(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
+        $tpl = $this->postRender($tpl);
+        echo $tpl;
+    }
+
+    public function render($route,$module,$params = [],$return=false) {
+        if (Response::getInstance()->getResponseType() != Response::STATUS_OK && Response::getInstance()->getResponseType() != Response::STATUS_REDIRECTION) {
+            $this->renderError($module);
+            return null;
+        }
+
+        $this->addParams($params);
+
+        if($this->forcedTemplate !== null) {
+            $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $this->forcedTemplate . ".phtml";
+        } else {
+            $templatePath = "application" . DIRECTORY_SEPARATOR . "module". DIRECTORY_SEPARATOR . $module. DIRECTORY_SEPARATOR . "views". DIRECTORY_SEPARATOR . strtolower($route['route']['controller']). DIRECTORY_SEPARATOR .strtolower($route['route']['action']).".phtml";
+        }
 
         $tpl = $this->includeTpl($templatePath);
         $this->initLayout($module);
 
-        if (!$this->useLayout) {
-            self::$layout    = null;
+        if(!$this->useLayout) {
+            self::$layout = null;
             $this->useLayout = true;
         }
 
-        if (self::$layout) {
+        if(self::$layout) {
             $this->params['templateContent'] = $tpl;
-            $tpl                             = $this->includeTpl(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
+            $tpl = $this->includeTpl(self::$layout . DIRECTORY_SEPARATOR . "layout.phtml");
         }
 
-        if (count($this->postRenderer)) {
+        $tpl = $this->postRender($tpl);
+        if($return) return $tpl;
+        echo $tpl;
+    }
+
+    protected function postRender($tpl) {
+        if(count($this->postRenderer)) {
             foreach ($this->postRenderer as $renderer) {
                 $renderer = new $renderer();
-                if (!($renderer instanceof PostRendererInterface)) {
+                if(!($renderer instanceof PostRendererInterface)) {
                     throw new \RuntimeException("PostRenderer must implements PostRendererInterface");
                 }
                 $tpl = $renderer->render($tpl);
             }
         }
-        if ($return) return $tpl;
-        echo $tpl;
+        return $tpl;
     }
 
     protected function includeTpl($tpl)
