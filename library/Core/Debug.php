@@ -100,7 +100,10 @@ HTML;
         $append = ini_get("error_append_string");
         $message = "<b>ETA ".$errorType.":</b>  ".$text;
 
-        echo $prepend.$message.$append;
+        if(self::inDevelMode()) {
+            echo $prepend . $message . $append;
+        }
+        
         error_log(strip_tags($message));
 
         if($errorType == self::ETA_ERROR_FATAL) {
